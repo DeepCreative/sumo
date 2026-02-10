@@ -4,6 +4,7 @@ Provides formal ontology grounding for entity typing across the
 Bravo Zero cognitive architecture.
 """
 
+from sumo.namespace_resolver import OntologyNamespaceResolver
 from sumo.registry import (
     SUMOConcept,
     SUMOHierarchy,
@@ -12,6 +13,7 @@ from sumo.registry import (
 )
 
 __all__ = [
+    "OntologyNamespaceResolver",
     "SUMOConcept",
     "SUMOHierarchy",
     "SUMOTypeRegistry",
