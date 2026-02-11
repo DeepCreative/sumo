@@ -1,6 +1,7 @@
 # SUMO data files (large, downloaded separately)
 data/Merge.kif
-data/sumo_hierarchy.json
+# Versioned cache IS tracked (ships with the wheel as package data)
+# data/sumo_hierarchy_v1.json  <-- intentionally NOT ignored
 
 # Python
 __pycache__/

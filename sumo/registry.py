@@ -28,9 +28,13 @@ logger = logging.getLogger(__name__)
 # Path resolution
 # ---------------------------------------------------------------------------
 
-# Resolution order:
+# Versioned cache filename — bump when Merge.kif or parser changes
+SUMO_CACHE_VERSION = "v1"
+SUMO_CACHE_FILENAME = f"sumo_hierarchy_{SUMO_CACHE_VERSION}.json"
+
+# Resolution order for KIF source:
 # 1. SUMO_KIF_PATH env var (explicit override for any tier)
-# 2. data/Merge.kif relative to this package (local dev)
+# 2. data/Merge.kif at repo root (local dev)
 _DEFAULT_KIF_PATH = Path(
     os.environ.get(
         "SUMO_KIF_PATH",
@@ -38,9 +42,13 @@ _DEFAULT_KIF_PATH = Path(
     )
 )
 
-# Cache path: SUMO_CACHE_PATH env var, or None (use kif_path sibling)
+# Resolution order for JSON cache:
+# 1. SUMO_CACHE_PATH env var (explicit override for any tier)
+# 2. sumo/data/sumo_hierarchy_v1.json inside the installed package
 _DEFAULT_CACHE_PATH: Path | None = (
-    Path(os.environ["SUMO_CACHE_PATH"]) if "SUMO_CACHE_PATH" in os.environ else None
+    Path(os.environ["SUMO_CACHE_PATH"])
+    if "SUMO_CACHE_PATH" in os.environ
+    else Path(__file__).resolve().parent / "data" / SUMO_CACHE_FILENAME
 )
 
 # Regex to extract (subclass Child Parent) assertions from SUO-KIF

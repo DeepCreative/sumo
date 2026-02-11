@@ -2,7 +2,7 @@
 
 Usage::
 
-    python -m sumo.build_cache --kif data/Merge.kif --output data/sumo_hierarchy.json
+    python -m sumo.build_cache --kif data/Merge.kif --output sumo/data/sumo_hierarchy_v1.json
 """
 
 from __future__ import annotations
@@ -13,7 +13,7 @@ import logging
 import sys
 from pathlib import Path
 
-from sumo.registry import parse_kif_hierarchy
+from sumo.registry import SUMO_CACHE_FILENAME, parse_kif_hierarchy
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -32,7 +32,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument(
         "--output",
         type=Path,
-        default=Path(__file__).resolve().parent.parent / "data" / "sumo_hierarchy.json",
+        default=Path(__file__).resolve().parent / "data" / SUMO_CACHE_FILENAME,
         help="Output path for the JSON cache",
     )
     args = parser.parse_args(argv)
