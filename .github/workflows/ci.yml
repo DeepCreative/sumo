@@ -1,0 +1,22 @@
+# SUMO Library CI
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+# Required for OIDC authentication to AWS CodeArtifact in shared workflows
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  ci:
+    uses: DeepCreative/.github/.github/workflows/ci-python.yml@main
+    with:
+      python-version: '3.11'
+      run-mypy: true
+      codecov-flags: sumo
+    secrets: inherit

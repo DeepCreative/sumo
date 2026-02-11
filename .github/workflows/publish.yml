@@ -1,0 +1,73 @@
+# Publish SUMO library to AWS CodeArtifact
+name: Publish to CodeArtifact
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'sumo/**'
+      - 'pyproject.toml'
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g., 0.1.0)'
+        required: false
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install build tools
+        run: pip install build twine
+
+      - name: Set version from release tag
+        if: github.event_name == 'release'
+        run: |
+          VERSION="${{ github.event.release.tag_name }}"
+          VERSION="${VERSION#v}"
+          sed -i "s/version = \".*\"/version = \"$VERSION\"/" pyproject.toml
+
+      - name: Set version from input
+        if: github.event.inputs.version != ''
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          sed -i "s/version = \".*\"/version = \"$VERSION\"/" pyproject.toml
+
+      - name: Build wheel
+        run: python -m build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+
+      - name: Get CodeArtifact token
+        run: |
+          TOKEN=$(aws codeartifact get-authorization-token \
+            --domain bravozero \
+            --domain-owner ${{ secrets.AWS_ACCOUNT_ID }} \
+            --query authorizationToken \
+            --output text)
+          echo "CODEARTIFACT_TOKEN=$TOKEN" >> $GITHUB_ENV
+
+      - name: Publish to CodeArtifact
+        run: |
+          twine upload dist/* \
+            --repository-url https://bravozero-${{ secrets.AWS_ACCOUNT_ID }}.d.codeartifact.us-west-2.amazonaws.com/pypi/bravozero-python/simple/ \
+            -u aws \
+            -p ${{ env.CODEARTIFACT_TOKEN }}
