@@ -62,9 +62,7 @@ def registry(tmp_path: Path) -> SUMOTypeRegistry:
 class TestGenerateAriaId:
     """Test aria:* ID generation from SUMO concepts."""
 
-    def test_automobile(
-        self, resolver: OntologyNamespaceResolver, registry: SUMOTypeRegistry
-    ) -> None:
+    def test_automobile(self, resolver: OntologyNamespaceResolver, registry: SUMOTypeRegistry) -> None:
         concept = registry.get_concept_info("Automobile")
         assert concept is not None
         aria_id = resolver.generate_aria_id(concept)
@@ -134,7 +132,9 @@ class TestReverseLookup:
         assert result is None
 
     def test_resolve_organization_alias(self, resolver: OntologyNamespaceResolver) -> None:
-        result = resolver.resolve_sumo_from_aria("aria:EntityType/Object/Agent/Organization")
+        result = resolver.resolve_sumo_from_aria(
+            "aria:EntityType/Object/Agent/Organization"
+        )
         # "Organization" is a reverse alias for "Corporation", but Organization
         # is also a direct SUMO concept. Should resolve to the direct concept.
         assert result == "Organization"
