@@ -95,6 +95,15 @@ jobs:
         path: |
           ./SUMOjEdit/build/test/results/*
 
+    - name: Produce triples.txt (SUMO as subject|predicate|object tuples for Neo4j)
+      run: java -Xmx10g -Xss1m -cp "/root/sigmakee/*" com.articulate.sigma.KButilities -r
+
+    - name: Upload triples.txt
+      uses: actions/upload-artifact@v4
+      with:
+        name: sumo-triples
+        path: ${{ env.SIGMA_HOME }}/KBs/triples.txt
+
     - name: Produce SUMO.fof
       run: java -Xmx10g -Xss1m -cp "/root/sigmakee/*" com.articulate.sigma.trans.SUMOKBtoTPTPKB
 
