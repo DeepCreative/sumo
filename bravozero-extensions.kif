@@ -1,0 +1,97 @@
+;; ========================================================================
+;; bravozero-extensions.kif
+;; ========================================================================
+;;
+;; Bravo Zero SUMO extensions for domain-specific concepts that cannot
+;; be expressed by composing existing SUMO terms.
+;;
+;; Each term has passed the Discovery -> Classification -> Implementation
+;; workflow documented in SUMO Capability Reference Part 6.
+;;
+;; Dependencies: Merge.kif, MilitaryProcesses.kif
+;; Version: 0.1.0
+;; Date: 2026-03-04
+
+;; ========================================================================
+;; RulesOfEngagement — Military engagement authorization profiles
+;; ========================================================================
+;;
+;; Requesting system: JOSHUA (wargaming + simulation)
+;; Discovery: PASSES — no existing ROE concept in SUMO
+;; Classification: CLASS, subclass of NormativeAttribute
+;;
+;; Step 0 inference (acceptance test):
+;;   Given (attribute ?AGENT weaponsHold) and (instance ?ATTACK Attack)
+;;   and (agent ?ATTACK ?AGENT), prove there exists a prior ViolentContest
+;;   where ?AGENT was the patient (self-defense justification).
+
+(subclass RulesOfEngagement NormativeAttribute)
+(documentation RulesOfEngagement EnglishLanguage
+  "A &%NormativeAttribute specifying the conditions under which a
+   &%MilitaryForce or &%CognitiveAgent is authorized to engage a
+   target. Instances include &%weaponsFree, &%weaponsTight, and
+   &%weaponsHold. These correspond to standard military rules of
+   engagement profiles that constrain the use of force.")
+
+(instance weaponsFree RulesOfEngagement)
+(documentation weaponsFree EnglishLanguage
+  "A &%RulesOfEngagement instance permitting engagement of any target
+   not positively identified as friendly. This is the least
+   restrictive engagement profile.")
+
+(instance weaponsTight RulesOfEngagement)
+(documentation weaponsTight EnglishLanguage
+  "A &%RulesOfEngagement instance permitting engagement only of
+   targets positively identified as hostile. The &%agent must confirm
+   the target is an &%enemy before engaging.")
+
+(instance weaponsHold RulesOfEngagement)
+(documentation weaponsHold EnglishLanguage
+  "A &%RulesOfEngagement instance prohibiting engagement except in
+   immediate self-defense. This is the most restrictive engagement
+   profile.")
+
+;; An agent has at most one ROE profile at any given time.
+
+(=>
+  (and
+    (instance ?ROE1 RulesOfEngagement)
+    (instance ?ROE2 RulesOfEngagement)
+    (holdsDuring ?TIME (attribute ?AGENT ?ROE1))
+    (holdsDuring ?TIME (attribute ?AGENT ?ROE2)))
+  (equal ?ROE1 ?ROE2))
+
+;; weaponsTight: engagement authorized only against confirmed enemies.
+;; Follows the confersRight pattern established in MilitaryProcesses.kif
+;; for ArmedReconnaissance (line 89) and TerminalAttackControl (line 482).
+
+(=>
+  (and
+    (attribute ?AGENT weaponsTight)
+    (instance ?AGENT CognitiveAgent)
+    (enemy ?AGENT ?TARGET))
+  (confersRight
+    (exists (?ATTACK)
+      (and
+        (instance ?ATTACK Attack)
+        (agent ?ATTACK ?AGENT)
+        (patient ?ATTACK ?TARGET)))
+    weaponsTight
+    ?AGENT))
+
+;; weaponsHold: engagement requires self-defense justification.
+;; If an agent under weaponsHold performs an attack, there must exist
+;; a prior hostile act against that agent by the target.
+
+(=>
+  (and
+    (attribute ?AGENT weaponsHold)
+    (instance ?ATTACK Attack)
+    (agent ?ATTACK ?AGENT)
+    (patient ?ATTACK ?TARGET))
+  (exists (?THREAT)
+    (and
+      (instance ?THREAT ViolentContest)
+      (agent ?THREAT ?TARGET)
+      (patient ?THREAT ?AGENT)
+      (earlier (WhenFn ?THREAT) (WhenFn ?ATTACK)))))
