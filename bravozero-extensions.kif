@@ -1,8 +1,8 @@
 ;; ========================================================================
-;; deepcreative-extensions.kif
+;; bravozero-extensions.kif
 ;; ========================================================================
 ;;
-;; DeepCreative SUMO extensions for domain-specific concepts that cannot
+;; Bravo Zero SUMO extensions for domain-specific concepts that cannot
 ;; be expressed by composing existing SUMO terms.
 ;;
 ;; Each term has passed the Discovery -> Classification -> Implementation
