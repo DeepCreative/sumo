@@ -80,8 +80,7 @@ jobs:
       run: |
         cp -R $ONTOLOGYPORTAL_GIT/sumo/* $SIGMA_HOME/KBs
         sed -i 's|<preference name="TPTP" value="yes" \/>|<preference name="TPTP" value="no"\/>|g' $SIGMA_HOME/KBs/config.xml
-        # DEBUG
-        #cat $SIGMA_HOME/KBs/config.xml
+        sed -i '/<\/kb>/i\  <constituent filename="bravozero-extensions.kif" \/>' $SIGMA_HOME/KBs/config.xml
 
     - name: Run SUMOjEdit integration tests
       working-directory: ./SUMOjEdit

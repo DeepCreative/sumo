@@ -47,6 +47,7 @@ jobs:
           echo "SIGMA_HOME: $SIGMA_HOME"
           mkdir -p $SIGMA_HOME/KBs/WordNetMappings
           wget https://raw.githubusercontent.com/ontologyportal/sigmakee/master/config.xml
+          sed -i '/<\/kb>/i\  <constituent filename="bravozero-extensions.kif" \/>' ./config.xml
           sed -f ./sumo/tests/TQSP/$SUMO_SIZE.sed ./config.xml > $SIGMA_HOME/KBs/config.xml
           sed -i '/<!--/,/-->/d' $SIGMA_HOME/KBs/config.xml
           cat $SIGMA_HOME/KBs/config.xml
