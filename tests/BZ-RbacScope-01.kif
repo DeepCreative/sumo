@@ -1,0 +1,27 @@
+
+;(note BZ-RbacScope-01)
+;(time 240)
+
+; Role-bounded permission within asserted scope.
+;
+; Jane is a ComplianceOfficer at Acme.  The role grants the FilingSign
+; permission.  We ask: can Jane sign filings for Acme?  Yes — Acme
+; includes itself in scope by the reflexive scopeIncludes axiom, and
+; the permission-derivation rule chains through.
+;
+; Defined in bravozero-extensions.kif (RbacScope block).
+
+(instance Acme Organization)
+(instance AcmeSubsidiary Organization)
+
+(instance jane CognitiveAgent)
+
+(instance ComplianceOfficer BzRole)
+(instance FilingSign BzPermission)
+
+(holdsRole jane ComplianceOfficer Acme)
+(roleGrants ComplianceOfficer FilingSign)
+
+;(query (permitted jane FilingSign Acme))
+
+;(answer yes)

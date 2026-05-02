@@ -1,0 +1,40 @@
+
+(note BZ-RulesOfEngagement-01)
+(time 240)
+
+; Acceptance test for the weaponsHold rule in bravozero-extensions.kif.
+;
+; The JOSHUA ROE block (2026-03-04) states in its header comment:
+;
+;   "Step 0 inference (acceptance test):
+;      Given (attribute ?AGENT weaponsHold) and (instance ?ATTACK Attack)
+;      and (agent ?ATTACK ?AGENT), prove there exists a prior ViolentContest
+;      where ?AGENT was the patient (self-defense justification)."
+;
+; That test was described in prose but never encoded in a runnable form.
+; This file turns the description into a theorem-prover query so the
+; property is CI-enforceable rather than aspirational.
+;
+; Test setup: JTF-A is a CognitiveAgent under the weaponsHold profile.
+; It executes Attack A-1 against target T-1.  The weaponsHold rule
+; should force the existence of a prior ViolentContest where T-1 was
+; the aggressor against JTF-A.  If Vampire proves that existential,
+; the rule does what its documentation claims.
+
+(instance JTF-A CognitiveAgent)
+(instance T-1 CognitiveAgent)
+(instance A-1 Attack)
+
+(attribute JTF-A weaponsHold)
+(agent A-1 JTF-A)
+(patient A-1 T-1)
+
+(query
+  (exists (?THREAT)
+    (and
+      (instance ?THREAT ViolentContest)
+      (agent ?THREAT T-1)
+      (patient ?THREAT JTF-A)
+      (earlier (WhenFn ?THREAT) (WhenFn A-1)))))
+
+(answer yes)

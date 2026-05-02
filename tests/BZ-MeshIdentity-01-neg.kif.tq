@@ -1,0 +1,37 @@
+
+(note BZ-MeshIdentity-01-neg)
+(time 240)
+
+; Negative control for BZ-MeshIdentity-01.
+;
+; Identical setup EXCEPT one principalAllowlisted entry is omitted:
+;   (principalAllowlisted AthenaApi CarouselApi)  ; <-- REMOVED
+;
+; The IUCT hops are still present end to end, so a simplistic "JWT is
+; forwarded" intuition would still conclude Jane is visible to CarouselApi.
+; The formalism does not agree: the inductive step requires BOTH the hop
+; AND the allowlist entry.  With the allowlist missing, the chain breaks
+; at AthenaApi -> CarouselApi and visiblePrincipal is not derivable.
+;
+; Expected verdict: the conjecture must NOT be provable.  If it proves,
+; the MeshIdentity axioms are overclaiming and need to be tightened.
+
+(instance Hydra BzService)
+(instance AthenaApi BzService)
+(instance CarouselApi BzService)
+
+(instance user-jane BzUser)
+(instance Req-42 Process)
+
+(originatesRequest Hydra Req-42)
+(originalPrincipal Req-42 user-jane)
+
+(iuctChainHop Hydra AthenaApi)
+(iuctChainHop AthenaApi CarouselApi)
+
+(principalAllowlisted Hydra AthenaApi)
+; (principalAllowlisted AthenaApi CarouselApi)  ; INTENTIONALLY OMITTED
+
+(query (visiblePrincipal CarouselApi Req-42 user-jane))
+
+(answer no)

@@ -1,0 +1,109 @@
+% Running in auto input_syntax mode. Trying TPTP
+% Refutation found. Thanks to Tanya!
+% SZS status Theorem for BZ-MeshIdentity-01
+% SZS output start Proof for BZ-MeshIdentity-01
+fof(f1,axiom,(
+  ! [X0,X1,X2,X3] : ((originatesRequest(X0,X2) & originalPrincipal(X2,X3) & iuctChainHop(X0,X1) & principalAllowlisted(X0,X1)) => visiblePrincipal(X1,X2,X3))),
+  file('libs/sumo/tests/local-vampire/BZ-MeshIdentity-01.p',rule_base)).
+fof(f2,axiom,(
+  ! [X0,X1,X2,X3] : ((visiblePrincipal(X0,X2,X3) & iuctChainHop(X0,X1) & principalAllowlisted(X0,X1)) => visiblePrincipal(X1,X2,X3))),
+  file('libs/sumo/tests/local-vampire/BZ-MeshIdentity-01.p',rule_inductive)).
+fof(f3,axiom,(
+  originatesRequest(hydra,req42)),
+  file('libs/sumo/tests/local-vampire/BZ-MeshIdentity-01.p',fact_origin)).
+fof(f4,axiom,(
+  originalPrincipal(req42,jane)),
+  file('libs/sumo/tests/local-vampire/BZ-MeshIdentity-01.p',fact_principal)).
+fof(f5,axiom,(
+  iuctChainHop(hydra,athenaApi)),
+  file('libs/sumo/tests/local-vampire/BZ-MeshIdentity-01.p',fact_hop1)).
+fof(f6,axiom,(
+  iuctChainHop(athenaApi,carouselApi)),
+  file('libs/sumo/tests/local-vampire/BZ-MeshIdentity-01.p',fact_hop2)).
+fof(f7,axiom,(
+  principalAllowlisted(hydra,athenaApi)),
+  file('libs/sumo/tests/local-vampire/BZ-MeshIdentity-01.p',fact_allow1)).
+fof(f8,axiom,(
+  principalAllowlisted(athenaApi,carouselApi)),
+  file('libs/sumo/tests/local-vampire/BZ-MeshIdentity-01.p',fact_allow2)).
+fof(f9,conjecture,(
+  visiblePrincipal(carouselApi,req42,jane)),
+  file('libs/sumo/tests/local-vampire/BZ-MeshIdentity-01.p',conjecture_visibility)).
+fof(f10,negated_conjecture,(
+  ~visiblePrincipal(carouselApi,req42,jane)),
+  inference(negated_conjecture,[status(cth)],[f9])).
+fof(f11,plain,(
+  ~visiblePrincipal(carouselApi,req42,jane)),
+  inference(flattening,[],[f10])).
+fof(f12,plain,(
+  ! [X0,X1,X2,X3] : (visiblePrincipal(X1,X2,X3) | (~originatesRequest(X0,X2) | ~originalPrincipal(X2,X3) | ~iuctChainHop(X0,X1) | ~principalAllowlisted(X0,X1)))),
+  inference(ennf_transformation,[],[f1])).
+fof(f13,plain,(
+  ! [X0,X1,X2,X3] : (visiblePrincipal(X1,X2,X3) | ~originatesRequest(X0,X2) | ~originalPrincipal(X2,X3) | ~iuctChainHop(X0,X1) | ~principalAllowlisted(X0,X1))),
+  inference(flattening,[],[f12])).
+fof(f14,plain,(
+  ! [X0,X1,X2,X3] : (visiblePrincipal(X1,X2,X3) | (~visiblePrincipal(X0,X2,X3) | ~iuctChainHop(X0,X1) | ~principalAllowlisted(X0,X1)))),
+  inference(ennf_transformation,[],[f2])).
+fof(f15,plain,(
+  ! [X0,X1,X2,X3] : (visiblePrincipal(X1,X2,X3) | ~visiblePrincipal(X0,X2,X3) | ~iuctChainHop(X0,X1) | ~principalAllowlisted(X0,X1))),
+  inference(flattening,[],[f14])).
+fof(f16,plain,(
+  ( ! [X2,X3,X0,X1] : (~principalAllowlisted(X0,X1) | ~originatesRequest(X0,X2) | ~originalPrincipal(X2,X3) | ~iuctChainHop(X0,X1) | visiblePrincipal(X1,X2,X3)) )),
+  inference(cnf_transformation,[],[f13])).
+fof(f17,plain,(
+  ( ! [X2,X3,X0,X1] : (~visiblePrincipal(X0,X2,X3) | visiblePrincipal(X1,X2,X3) | ~iuctChainHop(X0,X1) | ~principalAllowlisted(X0,X1)) )),
+  inference(cnf_transformation,[],[f15])).
+fof(f18,plain,(
+  originatesRequest(hydra,req42)),
+  inference(cnf_transformation,[],[f3])).
+fof(f19,plain,(
+  originalPrincipal(req42,jane)),
+  inference(cnf_transformation,[],[f4])).
+fof(f20,plain,(
+  iuctChainHop(hydra,athenaApi)),
+  inference(cnf_transformation,[],[f5])).
+fof(f21,plain,(
+  iuctChainHop(athenaApi,carouselApi)),
+  inference(cnf_transformation,[],[f6])).
+fof(f22,plain,(
+  principalAllowlisted(hydra,athenaApi)),
+  inference(cnf_transformation,[],[f7])).
+fof(f23,plain,(
+  principalAllowlisted(athenaApi,carouselApi)),
+  inference(cnf_transformation,[],[f8])).
+fof(f24,plain,(
+  ~visiblePrincipal(carouselApi,req42,jane)),
+  inference(cnf_transformation,[],[f11])).
+fof(f25,plain,(
+  ( ! [X0,X1] : (~originatesRequest(hydra,X0) | ~originalPrincipal(X0,X1) | ~iuctChainHop(hydra,athenaApi) | visiblePrincipal(athenaApi,X0,X1)) )),
+  inference(resolution,[],[f16,f22])).
+fof(f28,plain,(
+  ( ! [X0,X1] : (visiblePrincipal(athenaApi,X0,X1) | ~originalPrincipal(X0,X1) | ~originatesRequest(hydra,X0)) )),
+  inference(forward_subsumption_resolution,[],[f25,f20])).
+fof(f32,plain,(
+  ( ! [X2,X0,X1] : (visiblePrincipal(X2,X0,X1) | ~originatesRequest(hydra,X0) | ~originalPrincipal(X0,X1) | ~iuctChainHop(athenaApi,X2) | ~principalAllowlisted(athenaApi,X2)) )),
+  inference(resolution,[],[f28,f17])).
+fof(f35,plain,(
+  ~originatesRequest(hydra,req42) | ~originalPrincipal(req42,jane) | ~iuctChainHop(athenaApi,carouselApi) | ~principalAllowlisted(athenaApi,carouselApi)),
+  inference(resolution,[],[f32,f24])).
+fof(f37,plain,(
+  ~originalPrincipal(req42,jane) | ~iuctChainHop(athenaApi,carouselApi) | ~principalAllowlisted(athenaApi,carouselApi)),
+  inference(forward_subsumption_resolution,[],[f35,f18])).
+fof(f38,plain,(
+  ~iuctChainHop(athenaApi,carouselApi) | ~principalAllowlisted(athenaApi,carouselApi)),
+  inference(forward_subsumption_resolution,[],[f37,f19])).
+fof(f39,plain,(
+  ~principalAllowlisted(athenaApi,carouselApi)),
+  inference(forward_subsumption_resolution,[],[f38,f21])).
+fof(f40,plain,(
+  $false),
+  inference(forward_subsumption_resolution,[],[f39,f23])).
+% SZS output end Proof for BZ-MeshIdentity-01
+% ------------------------------
+% Version: Vampire 5.0.1 (Release build, commit )
+% CaDiCaL version: 2.1.3
+% Termination reason: Refutation
+% Time elapsed: 0.006 s
+% Peak memory usage: 6 MB
+% ------------------------------
+% ------------------------------

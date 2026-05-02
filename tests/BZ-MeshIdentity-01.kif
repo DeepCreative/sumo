@@ -1,0 +1,52 @@
+
+;(note BZ-MeshIdentity-01)
+;(time 240)
+
+; Delegated principal visibility across a well-formed 2-hop IUCT chain.
+;
+; Three services: Hydra (origin), AthenaApi (middle hop), CarouselApi (tail).
+; User Jane initiates request Req-42.  Every hop is principalAllowlisted.
+; The conjecture: CarouselApi can legitimately observe that Jane is the
+; original principal of Req-42.
+;
+; This should be provable using the base case + inductive step rules
+; defined in bravozero-extensions.kif (MeshIdentity block).
+
+(instance Hydra BzService)
+(instance AthenaApi BzService)
+(instance CarouselApi BzService)
+
+(instance user-jane BzUser)
+(instance Req-42 Process)
+
+(originatesRequest Hydra Req-42)
+(originalPrincipal Req-42 user-jane)
+
+(iuctChainHop Hydra AthenaApi)
+(iuctChainHop AthenaApi CarouselApi)
+
+(principalAllowlisted Hydra AthenaApi)
+(principalAllowlisted AthenaApi CarouselApi)
+
+; from bravozero-extensions.kif (MeshIdentity block) — shown here for
+; reader context; not re-asserted in the test file because the KB
+; already contains these axioms via the SigmaKEE constituent include.
+
+;(=>
+;  (and
+;    (originatesRequest ?A ?REQ)
+;    (originalPrincipal ?REQ ?U)
+;    (iuctChainHop ?A ?B)
+;    (principalAllowlisted ?A ?B))
+;  (visiblePrincipal ?B ?REQ ?U))
+;
+;(=>
+;  (and
+;    (visiblePrincipal ?B ?REQ ?U)
+;    (iuctChainHop ?B ?C)
+;    (principalAllowlisted ?B ?C))
+;  (visiblePrincipal ?C ?REQ ?U))
+
+;(query (visiblePrincipal CarouselApi Req-42 user-jane))
+
+;(answer yes)

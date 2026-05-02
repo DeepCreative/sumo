@@ -1,0 +1,50 @@
+% Running in auto input_syntax mode. Trying TPTP
+% SZS status CounterSatisfiable for BZ-MeshIdentity-01-neg
+% SZS output start Saturation.
+cnf(u20,axiom,
+    iuctChainHop(athenaApi,carouselApi)).
+
+cnf(u30,negated_conjecture,
+    ~principalAllowlisted(athenaApi,carouselApi)).
+
+cnf(u25,axiom,
+    visiblePrincipal(X2,X0,X1) | ~originatesRequest(hydra,X0) | ~originalPrincipal(X0,X1) | ~iuctChainHop(athenaApi,X2) | ~principalAllowlisted(athenaApi,X2)).
+
+cnf(u24,axiom,
+    visiblePrincipal(athenaApi,X0,X1) | ~originalPrincipal(X0,X1) | ~originatesRequest(hydra,X0)).
+
+cnf(u22,negated_conjecture,
+    ~visiblePrincipal(carouselApi,req42,jane)).
+
+cnf(u15,axiom,
+    ~principalAllowlisted(X0,X1) | ~originatesRequest(X0,X2) | ~originalPrincipal(X2,X3) | ~iuctChainHop(X0,X1) | visiblePrincipal(X1,X2,X3)).
+
+cnf(u17,axiom,
+    originatesRequest(hydra,req42)).
+
+cnf(u27,axiom,
+    ~principalAllowlisted(athenaApi,X2) | ~originalPrincipal(X0,X1) | ~iuctChainHop(athenaApi,X2) | ~originatesRequest(hydra,X0) | visiblePrincipal(X3,X0,X1) | ~iuctChainHop(X2,X3) | ~principalAllowlisted(X2,X3)).
+
+cnf(u16,axiom,
+    ~visiblePrincipal(X0,X2,X3) | visiblePrincipal(X1,X2,X3) | ~iuctChainHop(X0,X1) | ~principalAllowlisted(X0,X1)).
+
+cnf(u19,axiom,
+    iuctChainHop(hydra,athenaApi)).
+
+cnf(u18,axiom,
+    originalPrincipal(req42,jane)).
+
+cnf(u21,axiom,
+    principalAllowlisted(hydra,athenaApi)).
+
+% SZS output end Saturation.
+% SZS output start Definitions and Model Updates.
+% SZS output end Definitions and Model Updates.
+% ------------------------------
+% Version: Vampire 5.0.1 (Release build, commit )
+% CaDiCaL version: 2.1.3
+% Termination reason: Satisfiable
+% Time elapsed: 0.0000 s
+% Peak memory usage: 6 MB
+% ------------------------------
+% ------------------------------

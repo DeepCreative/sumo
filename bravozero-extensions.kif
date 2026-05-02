@@ -95,3 +95,204 @@
       (agent ?THREAT ?TARGET)
       (patient ?THREAT ?AGENT)
       (earlier (WhenFn ?THREAT) (WhenFn ?ATTACK)))))
+
+;; ========================================================================
+;; MeshIdentity — Delegated principal visibility across service hops
+;; ========================================================================
+;;
+;; Requesting system: PERSONA (mesh identity / IUCT)
+;; Discovery: PASSES — no existing multi-hop delegated-identity concept
+;;            in SUMO. Closest existing terms (agent, authors, uses) model
+;;            direct agency, not per-hop delegated propagation.
+;; Classification: new BinaryPredicates plus a TernaryPredicate, plus
+;;                 two rules (base + inductive) defining principal
+;;                 visibility as the closure of consented hops.
+;;
+;; Step 0 inference (acceptance test):
+;;   Given a chain of IUCT hops A -> B -> C originating at A for request
+;;   Req with original principal U, and principalAllowlisted at every
+;;   hop, prove that U is visible to C.
+;;   Negative control: if any one principalAllowlisted entry in the
+;;   chain is removed, U must NOT be provably visible to C.
+;;
+;; Why this matters: distinguishes topological reachability (a network
+;; path exists) from delegated identity (per-hop mutual consent). The
+;; common wrong intuition ("the JWT is forwarded, so the caller knows
+;; the user") collapses a conjunction of per-hop checks into a single
+;; transport property. The formalism makes every allowlist entry
+;; load-bearing: drop any one and the conclusion fails to prove.
+
+(subclass BzService Agent)
+(documentation BzService EnglishLanguage
+  "A computational &%Agent in the Bravo Zero service mesh that can
+   participate in delegated-identity chains via IUCT (Inter-Unit Call
+   Token) minting and verification.")
+
+(subclass BzUser CognitiveAgent)
+(documentation BzUser EnglishLanguage
+  "A &%CognitiveAgent who is the original principal of a request that
+   passes through one or more &%BzService hops in the mesh.")
+
+(instance originatesRequest BinaryPredicate)
+(domain originatesRequest 1 BzService)
+(domain originatesRequest 2 Process)
+(documentation originatesRequest EnglishLanguage
+  "(originatesRequest ?A ?REQ) means &%BzService ?A is the entry point
+   of request ?REQ into the mesh. The originating service is the one
+   that first interacts with the user and initiates the IUCT chain.")
+
+(instance iuctChainHop BinaryPredicate)
+(domain iuctChainHop 1 BzService)
+(domain iuctChainHop 2 BzService)
+(documentation iuctChainHop EnglishLanguage
+  "(iuctChainHop ?A ?B) means &%BzService ?A has made a direct,
+   IUCT-authenticated call to &%BzService ?B. This is a per-call
+   assertion; it does not imply transitivity on its own.")
+
+(instance principalAllowlisted BinaryPredicate)
+(domain principalAllowlisted 1 BzService)
+(domain principalAllowlisted 2 BzService)
+(documentation principalAllowlisted EnglishLanguage
+  "(principalAllowlisted ?A ?B) means &%BzService ?A is configured
+   to accept IUCT tokens minted for &%BzService ?B as the next hop.
+   This is a per-hop authorization check, separate from and stricter
+   than network reachability.")
+
+(instance originalPrincipal BinaryPredicate)
+(domain originalPrincipal 1 Process)
+(domain originalPrincipal 2 BzUser)
+(documentation originalPrincipal EnglishLanguage
+  "(originalPrincipal ?REQ ?U) means &%BzUser ?U is the user on whose
+   behalf request ?REQ was initiated.")
+
+(instance visiblePrincipal TernaryPredicate)
+(domain visiblePrincipal 1 BzService)
+(domain visiblePrincipal 2 Process)
+(domain visiblePrincipal 3 BzUser)
+(documentation visiblePrincipal EnglishLanguage
+  "(visiblePrincipal ?C ?REQ ?U) means &%BzService ?C can legitimately
+   observe that &%BzUser ?U is the original principal of request ?REQ.
+   This holds only when every hop between the origin of ?REQ and ?C is
+   both an &%iuctChainHop and is &%principalAllowlisted.")
+
+;; Base case.
+;; The service that originated the request makes one allowlisted hop to
+;; the next service; that next service sees the original principal.
+
+(=>
+  (and
+    (originatesRequest ?A ?REQ)
+    (originalPrincipal ?REQ ?U)
+    (iuctChainHop ?A ?B)
+    (principalAllowlisted ?A ?B))
+  (visiblePrincipal ?B ?REQ ?U))
+
+;; Inductive step.
+;; Principal visibility propagates one more hop if and only if BOTH
+;; the hop and the allowlist entry exist for that hop. Drop either
+;; conjunct and the chain breaks at this link.
+
+(=>
+  (and
+    (visiblePrincipal ?B ?REQ ?U)
+    (iuctChainHop ?B ?C)
+    (principalAllowlisted ?B ?C))
+  (visiblePrincipal ?C ?REQ ?U))
+
+;; ========================================================================
+;; RbacScope — Role-bounded permission with explicit organizational scope
+;; ========================================================================
+;;
+;; Requesting system: PERSONA (RBAC)
+;; Discovery: PASSES — SUMO has the Organization class but no axiomatized
+;;            role-and-scope model. Closest existing terms (memberFn,
+;;            position, occupiesPosition) cover individual employment
+;;            facts, not granted-permission derivations.
+;; Classification: two new attribute classes (BzRole, BzPermission), four
+;;                 new BinaryPredicates / TernaryPredicates, plus two
+;;                 rules: a reflexive-scope axiom and a permission-
+;;                 derivation rule.
+;;
+;; Step 0 inference (acceptance test):
+;;   Given holdsRole(P, R, S) and roleGrants(R, Perm) and an Organization
+;;   T included in S's scope, prove permitted(P, Perm, T).
+;;   Negative control: if T is an Organization not asserted to be inside
+;;   S's scope (e.g. a subsidiary of S), permitted(P, Perm, T) must NOT
+;;   be provable.
+;;
+;; Why this matters: PERSONA's role assignments carry an explicit scope
+;; (the org at which the role is held). The common LLM intuition is to
+;; treat "role at parent org" as authority over child orgs. The formalism
+;; refuses that step. Subsidiary access requires an explicit scopeIncludes
+;; assertion, not an inference from organizational hierarchy. This forces
+;; product/security to make scope-broadening grants visible and auditable.
+
+(subclass BzRole NormativeAttribute)
+(documentation BzRole EnglishLanguage
+  "A role assignable to a &%CognitiveAgent within the scope of an
+   &%Organization. Each &%BzRole grants a set of &%BzPermission
+   instances via the &%roleGrants relation.")
+
+(subclass BzPermission NormativeAttribute)
+(documentation BzPermission EnglishLanguage
+  "A permission to perform a specific class of action. Granted to a
+   &%CognitiveAgent indirectly via a &%BzRole and bounded by the
+   role's scope.")
+
+(instance holdsRole TernaryPredicate)
+(domain holdsRole 1 CognitiveAgent)
+(domain holdsRole 2 BzRole)
+(domain holdsRole 3 Organization)
+(documentation holdsRole EnglishLanguage
+  "(holdsRole ?P ?R ?S) means &%CognitiveAgent ?P holds &%BzRole ?R
+   within the scope of &%Organization ?S. The third argument is the
+   scope at which the role is held; it does not by itself imply
+   authority over child or related organizations.")
+
+(instance roleGrants BinaryPredicate)
+(domain roleGrants 1 BzRole)
+(domain roleGrants 2 BzPermission)
+(documentation roleGrants EnglishLanguage
+  "(roleGrants ?R ?PERM) means holders of &%BzRole ?R are granted
+   &%BzPermission ?PERM, subject to the scope constraints of the
+   role assignment.")
+
+(instance scopeIncludes BinaryPredicate)
+(domain scopeIncludes 1 Organization)
+(domain scopeIncludes 2 Organization)
+(documentation scopeIncludes EnglishLanguage
+  "(scopeIncludes ?S ?T) means &%Organization ?T is within the
+   permission scope of &%Organization ?S. This relation is reflexive
+   on Organizations but is NOT inferred from organizational hierarchy
+   (e.g. subOrganization). Cross-org and parent->child scope must be
+   asserted explicitly.")
+
+(instance permitted TernaryPredicate)
+(domain permitted 1 CognitiveAgent)
+(domain permitted 2 BzPermission)
+(domain permitted 3 Organization)
+(documentation permitted EnglishLanguage
+  "(permitted ?P ?PERM ?T) means &%CognitiveAgent ?P is authorized
+   to exercise &%BzPermission ?PERM on behalf of &%Organization ?T.
+   Derived from a &%holdsRole assertion whose role grants ?PERM and
+   whose scope includes ?T.")
+
+;; Reflexive scope.
+;; Every Organization is in its own permission scope by default.
+;; Cross-organization scope (e.g. parent -> subsidiary) is NOT inferred;
+;; it must be asserted explicitly via scopeIncludes.
+
+(=>
+  (instance ?O Organization)
+  (scopeIncludes ?O ?O))
+
+;; Permission derivation.
+;; Holding a role within scope S grants the role's permissions for
+;; any target T that is in S's scope.
+
+(=>
+  (and
+    (holdsRole ?P ?R ?S)
+    (roleGrants ?R ?PERM)
+    (scopeIncludes ?S ?T))
+  (permitted ?P ?PERM ?T))

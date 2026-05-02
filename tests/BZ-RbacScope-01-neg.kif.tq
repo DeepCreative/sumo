@@ -1,0 +1,35 @@
+
+(note BZ-RbacScope-01-neg)
+(time 240)
+
+; Negative control for BZ-RbacScope-01.
+;
+; Jane is still a ComplianceOfficer at Acme; the role still grants
+; FilingSign.  But we ask whether Jane is permitted to sign filings
+; FOR Acme-Subsidiary.  Without an asserted (scopeIncludes Acme
+; AcmeSubsidiary), the chain breaks: subsidiary access is not
+; inferred from organizational hierarchy.
+;
+; LLMs asked this question almost always answer yes ("she's a
+; compliance officer at the parent, of course she can sign for
+; the subsidiary").  The formalism does not agree.  Subsidiary
+; access requires an explicit scope-broadening grant.
+;
+; Expected verdict: the conjecture must NOT be provable.
+
+(instance Acme Organization)
+(instance AcmeSubsidiary Organization)
+
+(instance jane CognitiveAgent)
+
+(instance ComplianceOfficer BzRole)
+(instance FilingSign BzPermission)
+
+(holdsRole jane ComplianceOfficer Acme)
+(roleGrants ComplianceOfficer FilingSign)
+
+; (scopeIncludes Acme AcmeSubsidiary)  ; INTENTIONALLY NOT ASSERTED
+
+(query (permitted jane FilingSign AcmeSubsidiary))
+
+(answer no)

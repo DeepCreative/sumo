@@ -1,0 +1,41 @@
+% Running in auto input_syntax mode. Trying TPTP
+% SZS status CounterSatisfiable for BZ-RbacScope-01-neg
+% SZS output start Saturation.
+cnf(u20,axiom,
+    permitted(jane,X0,X1) | ~roleGrants(complianceOfficer,X0) | ~scopeIncludes(acme,X1)).
+
+cnf(u13,axiom,
+    scopeIncludes(X0,X0) | ~organization(X0)).
+
+cnf(u22,negated_conjecture,
+    ~scopeIncludes(acme,acmeSubsidiary)).
+
+cnf(u15,axiom,
+    organization(acme)).
+
+cnf(u17,axiom,
+    holdsRole(jane,complianceOfficer,acme)).
+
+cnf(u14,axiom,
+    ~holdsRole(X0,X1,X2) | permitted(X0,X3,X4) | ~roleGrants(X1,X3) | ~scopeIncludes(X2,X4)).
+
+cnf(u16,axiom,
+    organization(acmeSubsidiary)).
+
+cnf(u19,negated_conjecture,
+    ~permitted(jane,filingSign,acmeSubsidiary)).
+
+cnf(u18,axiom,
+    roleGrants(complianceOfficer,filingSign)).
+
+% SZS output end Saturation.
+% SZS output start Definitions and Model Updates.
+% SZS output end Definitions and Model Updates.
+% ------------------------------
+% Version: Vampire 5.0.1 (Release build, commit )
+% CaDiCaL version: 2.1.3
+% Termination reason: Satisfiable
+% Time elapsed: 0.0000 s
+% Peak memory usage: 6 MB
+% ------------------------------
+% ------------------------------
