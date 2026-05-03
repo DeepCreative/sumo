@@ -1,0 +1,32 @@
+
+(note BZ-AriaModelProvenance-01-neg)
+(time 240)
+
+; Negative control for BZ-AriaModelProvenance-01.
+;
+; Same inference, same model, but the model has now been archived for
+; a compliance-impacting cause (a discovered vulnerability that calls
+; prior outputs into question).
+;
+; The default LLM answer to "is this older inference still admissible?"
+; is yes ("the inference was valid when made"). The formalism does not
+; agree. Admissibility is a function of the model's CURRENT compliance
+; status, not its status at inference time.
+;
+; Note: this is the right policy for vulnerability-driven archival.
+; Routine performance-driven rotation is a different case and would
+; not assert modelArchivedForCause.
+;
+; Expected verdict: the conjecture must NOT be provable.
+
+(instance aria01Gemma3v13 AriaModel)
+(instance inference17 AriaInference)
+
+(inferenceFromModel inference17 aria01Gemma3v13)
+
+; DIFFERENCE FROM POSITIVE CASE: model is now archived for cause
+(modelArchivedForCause aria01Gemma3v13)
+
+(query (admissibleForCompliance inference17))
+
+(answer no)

@@ -413,3 +413,94 @@
     (auditEventTenant ?E ?T)
     (withinCaseWindow ?C ?E))
   (visibleAudit ?U ?E))
+
+;; ========================================================================
+;; AriaModelProvenance - Inference admissibility under model rotation
+;; ========================================================================
+;;
+;; Requesting system: ARIA (model orchestration and inference component
+;;                    lifecycle management)
+;; Discovery: PASSES - SUMO has ComputerProgram and a notion of artifact
+;;            lifecycle but no axiomatized link between a generated
+;;            output's ongoing admissibility and its source artifact's
+;;            current compliance status.
+;; Classification: two new entity classes (AriaModel, AriaInference)
+;;                 plus three predicates and one derivation rule with a
+;;                 classical-negation guard.
+;;
+;; Step 0 inference (acceptance test):
+;;   Given inferenceFromModel(P, M) and (not (modelArchivedForCause M)),
+;;   prove admissibleForCompliance(P).
+;;   Negative control: given inferenceFromModel(P, M) AND
+;;   modelArchivedForCause(M), admissibleForCompliance(P) must NOT
+;;   be provable.
+;;
+;; Why this matters: the default intuition (and the one LLMs reproduce
+;; on first asking) is "the inference was valid when made, so it's
+;; valid forever." That intuition is exactly wrong for vulnerability-
+;; driven model archival. If a model was archived because its outputs
+;; have been called into question (a discovered bias, a security flaw,
+;; a class of factual errors), then prior inferences from that model
+;; should not be admissible for compliance use after archival, even if
+;; they were generated when the model was active.
+;;
+;; The formalism makes the model's CURRENT compliance status
+;; load-bearing on the inference's admissibility. Routine performance-
+;; driven model rotation does not assert modelArchivedForCause, so
+;; prior inferences remain admissible. Vulnerability-driven archival
+;; does assert it, and prior inferences become inadmissible.
+
+(subclass AriaModel ComputerProgram)
+(documentation AriaModel EnglishLanguage
+  "A versioned ARIA model artifact (e.g. an entry in
+   d3n_model_registry.yaml, a fine-tuned LoRA, a base model). Each
+   version is a distinct &%AriaModel; admissibility decisions apply
+   to the version, not the model family.")
+
+(subclass AriaInference ContentBearingObject)
+(documentation AriaInference EnglishLanguage
+  "An immutable record of a single inference performed by an
+   &%AriaModel: the prompt, the response, the timestamp, and the
+   provenance link to the model version. Used downstream as a
+   compliance-relevant artifact in audit, attestation, and review.")
+
+(instance inferenceFromModel BinaryPredicate)
+(domain inferenceFromModel 1 AriaInference)
+(domain inferenceFromModel 2 AriaModel)
+(documentation inferenceFromModel EnglishLanguage
+  "(inferenceFromModel ?P ?M) means &%AriaInference ?P was
+   produced by &%AriaModel ?M. Established at inference time and
+   immutable thereafter.")
+
+(instance modelArchivedForCause UnaryPredicate)
+(domain modelArchivedForCause 1 AriaModel)
+(documentation modelArchivedForCause EnglishLanguage
+  "(modelArchivedForCause ?M) means &%AriaModel ?M was archived for
+   a compliance-impacting cause: a discovered vulnerability, a
+   systematic bias, a security flaw, or any other reason that calls
+   the model's prior outputs into question. Routine rotation for
+   performance, capability, or scheduling reasons does NOT assert
+   this predicate. The distinction matters: only causes that retroact
+   on output validity should trigger this.")
+
+(instance admissibleForCompliance UnaryPredicate)
+(domain admissibleForCompliance 1 AriaInference)
+(documentation admissibleForCompliance EnglishLanguage
+  "(admissibleForCompliance ?P) means &%AriaInference ?P may be
+   used as evidence in a compliance query, audit response, or
+   regulatory submission. Derived from the source model's current
+   archival status, not from the inference's age or generation
+   conditions.")
+
+;; Admissibility rule.
+;; An inference is admissible iff its source model has not been
+;; archived for a compliance-impacting cause. The negation is
+;; classical: deriving admissibility requires either no archival
+;; assertion at all OR an explicit not-archived assertion.
+;; Asserting (modelArchivedForCause ?M) defeats this derivation.
+
+(=>
+  (and
+    (inferenceFromModel ?P ?M)
+    (not (modelArchivedForCause ?M)))
+  (admissibleForCompliance ?P))

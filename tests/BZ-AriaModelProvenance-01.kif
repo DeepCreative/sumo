@@ -1,0 +1,23 @@
+
+;(note BZ-AriaModelProvenance-01)
+;(time 240)
+
+; Inference from an active ARIA model is admissible for compliance use.
+;
+; inference17 was produced by aria01-gemma3-9b-v13. The model is not
+; under compliance-impacting archival. The admissibility rule fires.
+;
+; Defined in bravozero-extensions.kif (AriaModelProvenance block).
+
+(instance aria01Gemma3v13 AriaModel)
+(instance inference17 AriaInference)
+
+(inferenceFromModel inference17 aria01Gemma3v13)
+
+; explicit positive assertion (the admissibility rule needs the
+; not-archived clause to fire under classical-negation semantics)
+(not (modelArchivedForCause aria01Gemma3v13))
+
+;(query (admissibleForCompliance inference17))
+
+;(answer yes)

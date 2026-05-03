@@ -1,0 +1,58 @@
+% Running in auto input_syntax mode. Trying TPTP
+% Refutation found. Thanks to Tanya!
+% SZS status Theorem for BZ-AriaModelProvenance-01
+% SZS output start Proof for BZ-AriaModelProvenance-01
+fof(f1,axiom,(
+  ! [X0,X1] : ((inferenceFromModel(X0,X1) & ~modelArchivedForCause(X1)) => admissibleForCompliance(X0))),
+  file('libs/sumo/tests/local-vampire/BZ-AriaModelProvenance-01.p',rule_admissibility)).
+fof(f2,axiom,(
+  inferenceFromModel(inference17,aria01Gemma3v13)),
+  file('libs/sumo/tests/local-vampire/BZ-AriaModelProvenance-01.p',fact_provenance)).
+fof(f3,axiom,(
+  ~modelArchivedForCause(aria01Gemma3v13)),
+  file('libs/sumo/tests/local-vampire/BZ-AriaModelProvenance-01.p',fact_model_active)).
+fof(f4,conjecture,(
+  admissibleForCompliance(inference17)),
+  file('libs/sumo/tests/local-vampire/BZ-AriaModelProvenance-01.p',conjecture_admissible)).
+fof(f5,negated_conjecture,(
+  ~admissibleForCompliance(inference17)),
+  inference(negated_conjecture,[status(cth)],[f4])).
+fof(f6,plain,(
+  ~admissibleForCompliance(inference17)),
+  inference(flattening,[],[f5])).
+fof(f7,plain,(
+  ! [X0,X1] : (admissibleForCompliance(X0) | (~inferenceFromModel(X0,X1) | modelArchivedForCause(X1)))),
+  inference(ennf_transformation,[],[f1])).
+fof(f8,plain,(
+  ! [X0,X1] : (admissibleForCompliance(X0) | ~inferenceFromModel(X0,X1) | modelArchivedForCause(X1))),
+  inference(flattening,[],[f7])).
+fof(f9,plain,(
+  ( ! [X0,X1] : (~inferenceFromModel(X0,X1) | admissibleForCompliance(X0) | modelArchivedForCause(X1)) )),
+  inference(cnf_transformation,[],[f8])).
+fof(f10,plain,(
+  inferenceFromModel(inference17,aria01Gemma3v13)),
+  inference(cnf_transformation,[],[f2])).
+fof(f11,plain,(
+  ~modelArchivedForCause(aria01Gemma3v13)),
+  inference(cnf_transformation,[],[f3])).
+fof(f12,plain,(
+  ~admissibleForCompliance(inference17)),
+  inference(cnf_transformation,[],[f6])).
+fof(f13,plain,(
+  admissibleForCompliance(inference17) | modelArchivedForCause(aria01Gemma3v13)),
+  inference(resolution,[],[f9,f10])).
+fof(f14,plain,(
+  modelArchivedForCause(aria01Gemma3v13)),
+  inference(forward_subsumption_resolution,[],[f13,f12])).
+fof(f15,plain,(
+  $false),
+  inference(forward_subsumption_resolution,[],[f14,f11])).
+% SZS output end Proof for BZ-AriaModelProvenance-01
+% ------------------------------
+% Version: Vampire 5.0.1 (Release build, commit )
+% CaDiCaL version: 2.1.3
+% Termination reason: Refutation
+% Time elapsed: 0.0000 s
+% Peak memory usage: 6 MB
+% ------------------------------
+% ------------------------------
