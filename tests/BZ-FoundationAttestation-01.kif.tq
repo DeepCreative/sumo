@@ -1,0 +1,23 @@
+
+(note BZ-FoundationAttestation-01)
+(time 240)
+
+; Event with complete dual-write chain (DB + on-chain + in-window
+; + valid signature) is attested.
+;
+; event42 was written to the database, mirrored on the blockchain,
+; the attestation appeared within the configured window, and the
+; chaincode receipt signature is valid. The attestation rule fires.
+;
+; Defined in bravozero-extensions.kif (FoundationAttestation block).
+
+(instance event42 AttestableEvent)
+
+(eventWritten event42)
+(eventAttestedOnChain event42)
+(withinAttestationWindow event42)
+(chainSignatureValid event42)
+
+(query (attested event42))
+
+(answer yes)

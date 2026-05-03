@@ -1,0 +1,24 @@
+% Running in auto input_syntax mode. Trying TPTP
+% SZS status CounterSatisfiable for BZ-FoundationAttestation-01-neg
+% SZS output start Saturation.
+% SZS output end Saturation.
+% SZS output start Definitions and Model Updates.
+for all inputs,
+    define chainSignatureValid(X0) := $true
+for all inputs,
+    define eventAttestedOnChain(X0) := $true
+for all inputs,
+    define eventWritten(X0) := $true
+for all inputs,
+    define attested(X0) := $false
+for all inputs,
+    define withinAttestationWindow(X0) := $false
+% SZS output end Definitions and Model Updates.
+% ------------------------------
+% Version: Vampire 5.0.1 (Release build, commit )
+% CaDiCaL version: 2.1.3
+% Termination reason: Satisfiable
+% Time elapsed: 0.0000 s
+% Peak memory usage: 5 MB
+% ------------------------------
+% ------------------------------

@@ -584,3 +584,99 @@
     (holdsRole ?P2 ComplianceOfficer ?O)
     (not (equal ?P1 ?P2)))
   (quorumSatisfied ?F))
+
+;; ========================================================================
+;; FoundationAttestation - Dual-write event attestation with time and
+;;                          signature requirements
+;; ========================================================================
+;;
+;; Requesting system: Foundation (blockchain dual-write subsystem;
+;;                    chaincode, attestation API, audit bridge)
+;; Discovery: PASSES - SUMO has signature and document-validity
+;;            primitives but no axiomatized model of dual-write
+;;            attestation with a time-window AND a signature-validity
+;;            conjunction.
+;; Classification: one new entity class (AttestableEvent), four
+;;                 unary predicates capturing the four required
+;;                 conditions, and one derivation rule.
+;;
+;; Step 0 inference (acceptance test):
+;;   Given eventWritten(E), eventAttestedOnChain(E),
+;;   withinAttestationWindow(E), and chainSignatureValid(E),
+;;   prove attested(E).
+;;   Negative control: if any one of the four conjuncts is missing
+;;   (most importantly withinAttestationWindow), attested(E) must NOT
+;;   be provable.
+;;
+;; Why this matters: dual-write architectures commonly drift in
+;; latency. The naive intuition "the event is on the chain, that's
+;; attested" conflates "eventually written" with "verifiably written
+;; within the trust window." Regulatory frameworks that depend on
+;; attestation latency bounds (financial reporting, audit logs with
+;; retention guarantees, immutable event records for compliance) need
+;; this distinction enforced, not assumed. Likewise, treating the
+;; presence of a chain entry as proof without verifying the signature
+;; admits forged or replayed entries; the signature conjunct rules
+;; that out.
+
+(subclass AttestableEvent ContentBearingObject)
+(documentation AttestableEvent EnglishLanguage
+  "An event that participates in the &%Foundation dual-write
+   protocol: written to a primary database and mirrored onto a
+   blockchain via chaincode for immutable attestation. Modeled as
+   a single entity per event, regardless of how many storage layers
+   the dual-write touches.")
+
+(instance eventWritten UnaryPredicate)
+(domain eventWritten 1 AttestableEvent)
+(documentation eventWritten EnglishLanguage
+  "(eventWritten ?E) means &%AttestableEvent ?E has been
+   successfully persisted to the primary database. The first
+   write of the dual-write pair.")
+
+(instance eventAttestedOnChain UnaryPredicate)
+(domain eventAttestedOnChain 1 AttestableEvent)
+(documentation eventAttestedOnChain EnglishLanguage
+  "(eventAttestedOnChain ?E) means &%AttestableEvent ?E has
+   appeared in the blockchain attestation log via chaincode
+   invocation. Satisfies presence on the chain but says nothing
+   about timeliness or signature validity.")
+
+(instance withinAttestationWindow UnaryPredicate)
+(domain withinAttestationWindow 1 AttestableEvent)
+(documentation withinAttestationWindow EnglishLanguage
+  "(withinAttestationWindow ?E) means the on-chain attestation
+   for ?E appeared within the configured maximum delay relative
+   to the primary database write. The trust-window bound that
+   distinguishes verified-and-timely attestation from
+   eventually-on-chain.")
+
+(instance chainSignatureValid UnaryPredicate)
+(domain chainSignatureValid 1 AttestableEvent)
+(documentation chainSignatureValid EnglishLanguage
+  "(chainSignatureValid ?E) means the chaincode receipt for ?E
+   carries a cryptographically valid signature from a trusted
+   chain endorser. Distinguishes legitimate attestation from
+   forged or replayed chain entries.")
+
+(instance attested UnaryPredicate)
+(domain attested 1 AttestableEvent)
+(documentation attested EnglishLanguage
+  "(attested ?E) means &%AttestableEvent ?E satisfies the full
+   dual-write attestation contract. Derived from the conjunction
+   of all four prerequisite conditions; never asserted directly.")
+
+;; Attestation rule.
+;; All four conjuncts are load-bearing. Drop any one and the
+;; conclusion is not derivable. The two most commonly missed in
+;; practice are withinAttestationWindow (when chain attestation
+;; lags) and chainSignatureValid (when receipt verification is
+;; skipped because it's expensive).
+
+(=>
+  (and
+    (eventWritten ?E)
+    (eventAttestedOnChain ?E)
+    (withinAttestationWindow ?E)
+    (chainSignatureValid ?E))
+  (attested ?E))

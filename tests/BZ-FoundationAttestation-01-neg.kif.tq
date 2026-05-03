@@ -1,0 +1,30 @@
+
+(note BZ-FoundationAttestation-01-neg)
+(time 240)
+
+; Negative control for BZ-FoundationAttestation-01.
+;
+; Same event, written to the DB and attested on chain with a valid
+; signature, BUT withinAttestationWindow is omitted: the attestation
+; appeared OUTSIDE the configured time window.
+;
+; The naive intuition "the chain has it, that's attested" is what
+; most LLMs reproduce. The formalism does not agree. The attestation
+; rule requires withinAttestationWindow as a load-bearing conjunct.
+; Treating "eventually written to the chain" as equivalent to
+; "verifiably attested within the trust window" defeats the
+; latency-bounded guarantees that regulatory frameworks depend on.
+;
+; Expected verdict: the conjecture must NOT be provable.
+
+(instance event42 AttestableEvent)
+
+(eventWritten event42)
+(eventAttestedOnChain event42)
+(chainSignatureValid event42)
+
+; (withinAttestationWindow event42)  ; INTENTIONALLY OMITTED
+
+(query (attested event42))
+
+(answer no)

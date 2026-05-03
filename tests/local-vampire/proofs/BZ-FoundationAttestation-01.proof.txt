@@ -1,0 +1,76 @@
+% Running in auto input_syntax mode. Trying TPTP
+% Refutation found. Thanks to Tanya!
+% SZS status Theorem for BZ-FoundationAttestation-01
+% SZS output start Proof for BZ-FoundationAttestation-01
+fof(f1,axiom,(
+  ! [X0] : ((eventWritten(X0) & eventAttestedOnChain(X0) & withinAttestationWindow(X0) & chainSignatureValid(X0)) => attested(X0))),
+  file('libs/sumo/tests/local-vampire/BZ-FoundationAttestation-01.p',rule_attestation)).
+fof(f2,axiom,(
+  eventWritten(event42)),
+  file('libs/sumo/tests/local-vampire/BZ-FoundationAttestation-01.p',fact_written)).
+fof(f3,axiom,(
+  eventAttestedOnChain(event42)),
+  file('libs/sumo/tests/local-vampire/BZ-FoundationAttestation-01.p',fact_on_chain)).
+fof(f4,axiom,(
+  withinAttestationWindow(event42)),
+  file('libs/sumo/tests/local-vampire/BZ-FoundationAttestation-01.p',fact_in_window)).
+fof(f5,axiom,(
+  chainSignatureValid(event42)),
+  file('libs/sumo/tests/local-vampire/BZ-FoundationAttestation-01.p',fact_sig_valid)).
+fof(f6,conjecture,(
+  attested(event42)),
+  file('libs/sumo/tests/local-vampire/BZ-FoundationAttestation-01.p',conjecture_attested)).
+fof(f7,negated_conjecture,(
+  ~attested(event42)),
+  inference(negated_conjecture,[status(cth)],[f6])).
+fof(f8,plain,(
+  ~attested(event42)),
+  inference(flattening,[],[f7])).
+fof(f9,plain,(
+  ! [X0] : (attested(X0) | (~eventWritten(X0) | ~eventAttestedOnChain(X0) | ~withinAttestationWindow(X0) | ~chainSignatureValid(X0)))),
+  inference(ennf_transformation,[],[f1])).
+fof(f10,plain,(
+  ! [X0] : (attested(X0) | ~eventWritten(X0) | ~eventAttestedOnChain(X0) | ~withinAttestationWindow(X0) | ~chainSignatureValid(X0))),
+  inference(flattening,[],[f9])).
+fof(f11,plain,(
+  ( ! [X0] : (~chainSignatureValid(X0) | ~eventWritten(X0) | ~eventAttestedOnChain(X0) | ~withinAttestationWindow(X0) | attested(X0)) )),
+  inference(cnf_transformation,[],[f10])).
+fof(f12,plain,(
+  eventWritten(event42)),
+  inference(cnf_transformation,[],[f2])).
+fof(f13,plain,(
+  eventAttestedOnChain(event42)),
+  inference(cnf_transformation,[],[f3])).
+fof(f14,plain,(
+  withinAttestationWindow(event42)),
+  inference(cnf_transformation,[],[f4])).
+fof(f15,plain,(
+  chainSignatureValid(event42)),
+  inference(cnf_transformation,[],[f5])).
+fof(f16,plain,(
+  ~attested(event42)),
+  inference(cnf_transformation,[],[f8])).
+fof(f17,plain,(
+  ~eventWritten(event42) | ~eventAttestedOnChain(event42) | ~withinAttestationWindow(event42) | attested(event42)),
+  inference(resolution,[],[f11,f15])).
+fof(f18,plain,(
+  ~eventAttestedOnChain(event42) | ~withinAttestationWindow(event42) | attested(event42)),
+  inference(forward_subsumption_resolution,[],[f17,f12])).
+fof(f19,plain,(
+  ~withinAttestationWindow(event42) | attested(event42)),
+  inference(forward_subsumption_resolution,[],[f18,f13])).
+fof(f20,plain,(
+  attested(event42)),
+  inference(forward_subsumption_resolution,[],[f19,f14])).
+fof(f21,plain,(
+  $false),
+  inference(forward_subsumption_resolution,[],[f20,f16])).
+% SZS output end Proof for BZ-FoundationAttestation-01
+% ------------------------------
+% Version: Vampire 5.0.1 (Release build, commit )
+% CaDiCaL version: 2.1.3
+% Termination reason: Refutation
+% Time elapsed: 0.0000 s
+% Peak memory usage: 6 MB
+% ------------------------------
+% ------------------------------
