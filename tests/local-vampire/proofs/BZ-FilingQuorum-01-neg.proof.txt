@@ -1,0 +1,47 @@
+% Running in auto input_syntax mode. Trying TPTP
+% SZS status CounterSatisfiable for BZ-FilingQuorum-01-neg
+% SZS output start Saturation.
+cnf(u20,axiom,
+    jane != bob).
+
+cnf(u23,axiom,
+    ~holdsRole(X1,complianceOfficer,acme) | ~signedBy(X0,X1) | ~signedBy(X0,jane) | ~filingFor(X0,acme) | quorumSatisfied(X0) | jane = X1).
+
+cnf(u24,axiom,
+    ~holdsRole(X1,complianceOfficer,globex) | ~signedBy(X0,X1) | ~signedBy(X0,bob) | ~filingFor(X0,globex) | quorumSatisfied(X0) | bob = X1).
+
+cnf(u22,negated_conjecture,
+    ~quorumSatisfied(filing77)).
+
+cnf(u15,axiom,
+    filingFor(filing77,acme)).
+
+cnf(u17,axiom,
+    signedBy(filing77,bob)).
+
+cnf(u14,axiom,
+    ~holdsRole(X3,complianceOfficer,X1) | ~filingFor(X0,X1) | ~signedBy(X0,X2) | ~signedBy(X0,X3) | ~holdsRole(X2,complianceOfficer,X1) | quorumSatisfied(X0) | X2 = X3).
+
+cnf(u16,axiom,
+    signedBy(filing77,jane)).
+
+cnf(u19,axiom,
+    holdsRole(bob,complianceOfficer,globex)).
+
+cnf(u18,axiom,
+    holdsRole(jane,complianceOfficer,acme)).
+
+cnf(u21,axiom,
+    acme != globex).
+
+% SZS output end Saturation.
+% SZS output start Definitions and Model Updates.
+% SZS output end Definitions and Model Updates.
+% ------------------------------
+% Version: Vampire 5.0.1 (Release build, commit )
+% CaDiCaL version: 2.1.3
+% Termination reason: Satisfiable
+% Time elapsed: 0.001 s
+% Peak memory usage: 6 MB
+% ------------------------------
+% ------------------------------

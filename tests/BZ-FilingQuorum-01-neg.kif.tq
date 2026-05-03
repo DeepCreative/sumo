@@ -1,0 +1,42 @@
+
+(note BZ-FilingQuorum-01-neg)
+(time 240)
+
+; Negative control for BZ-FilingQuorum-01.
+;
+; Same filing, same two signers, but bob holds ComplianceOfficer at
+; globex (a different organization), not at acme. The naive intuition
+; "two compliance officers signed, that's quorum" is what most LLMs
+; reproduce. The formalism does not agree: the quorum rule requires
+; both signers to hold the role AT THE FILING'S organization.
+;
+; This catches a real authorization bug: counting role-holders globally
+; instead of per-org. In a multi-tenant policy product, getting this
+; wrong means cross-org actors can quietly satisfy same-org quorum.
+;
+; Expected verdict: the conjecture must NOT be provable.
+
+(instance acme Organization)
+(instance globex Organization)
+
+(instance jane CognitiveAgent)
+(instance bob CognitiveAgent)
+
+(instance ComplianceOfficer BzRole)
+
+(instance filing77 Filing)
+
+(filingFor filing77 acme)
+(signedBy filing77 jane)
+(signedBy filing77 bob)
+(holdsRole jane ComplianceOfficer acme)
+
+; DIFFERENCE FROM POSITIVE CASE: bob's role is scoped to globex
+(holdsRole bob ComplianceOfficer globex)
+
+(not (equal jane bob))
+(not (equal acme globex))
+
+(query (quorumSatisfied filing77))
+
+(answer no)

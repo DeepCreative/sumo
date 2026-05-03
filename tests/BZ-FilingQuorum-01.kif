@@ -1,0 +1,34 @@
+
+;(note BZ-FilingQuorum-01)
+;(time 240)
+
+; Two distinct ComplianceOfficers at the filing's organization satisfy
+; quorum.
+;
+; jane and bob both hold ComplianceOfficer at acme. Both signed
+; filing77 (which is for acme). The quorum rule fires.
+;
+; Defined in bravozero-extensions.kif (FilingQuorum block).
+; ComplianceOfficer is the BzRole instance defined alongside RbacScope.
+
+(instance acme Organization)
+
+(instance jane CognitiveAgent)
+(instance bob CognitiveAgent)
+
+(instance ComplianceOfficer BzRole)
+
+(instance filing77 Filing)
+
+(filingFor filing77 acme)
+(signedBy filing77 jane)
+(signedBy filing77 bob)
+(holdsRole jane ComplianceOfficer acme)
+(holdsRole bob ComplianceOfficer acme)
+
+; distinctness must be asserted; classical FOL does not infer it
+(not (equal jane bob))
+
+;(query (quorumSatisfied filing77))
+
+;(answer yes)

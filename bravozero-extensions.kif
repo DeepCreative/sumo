@@ -504,3 +504,83 @@
     (inferenceFromModel ?P ?M)
     (not (modelArchivedForCause ?M)))
   (admissibleForCompliance ?P))
+
+;; ========================================================================
+;; FilingQuorum - Multi-signature filing requires same-org signers
+;; ========================================================================
+;;
+;; Requesting system: GovRelations (regulatory and compliance filing
+;;                    workflows that require N independent signatures)
+;; Discovery: PASSES - SUMO has the Organization class and various
+;;            signature/document predicates, but no axiomatized model
+;;            of multi-signature quorum bounded by organizational scope.
+;; Classification: one new entity class (Filing), three new
+;;                 BinaryPredicates plus a TernaryPredicate (the
+;;                 quorum-derivation rule), and a distinctness
+;;                 requirement on the two signers.
+;;
+;; Step 0 inference (acceptance test):
+;;   Given filingFor(F, O), signedBy(F, P1), signedBy(F, P2),
+;;   holdsRole(P1, ComplianceOfficer, O), holdsRole(P2, ComplianceOfficer, O),
+;;   and (not (equal P1 P2)), prove quorumSatisfied(F).
+;;   Negative control: if either signer holds the role at a DIFFERENT
+;;   organization than the filing's organization, quorumSatisfied(F)
+;;   must NOT be provable.
+;;
+;; Why this matters: a frequent authorization-bug class in multi-tenant
+;; policy systems is counting role-holders globally instead of per-org.
+;; The naive intuition "two compliance officers signed, that's quorum"
+;; is what an LLM (and many code reviews) reproduce. The formalism
+;; requires both signers to hold the role AT the filing's organization.
+;; A ComplianceOfficer at globex cannot help satisfy quorum on an
+;; acme filing, even though their role title matches.
+;;
+;; Reuses BzRole (defined in the RbacScope block) and Organization
+;; (SUMO native). ComplianceOfficer is asserted as a specific BzRole
+;; instance in scenario test data.
+
+(subclass Filing ContentBearingObject)
+(documentation Filing EnglishLanguage
+  "A document submitted to a regulator or other authority on behalf
+   of an &%Organization, requiring one or more signatures from
+   role-holders at that organization. Modeled here as a single
+   entity; multi-document filings can be modeled as collections.")
+
+(instance filingFor BinaryPredicate)
+(domain filingFor 1 Filing)
+(domain filingFor 2 Organization)
+(documentation filingFor EnglishLanguage
+  "(filingFor ?F ?O) means &%Filing ?F is submitted on behalf of
+   &%Organization ?O. The organization establishes the scope within
+   which signature roles must be held to count toward quorum.")
+
+(instance signedBy BinaryPredicate)
+(domain signedBy 1 Filing)
+(domain signedBy 2 CognitiveAgent)
+(documentation signedBy EnglishLanguage
+  "(signedBy ?F ?P) means &%CognitiveAgent ?P has affixed a
+   signature to &%Filing ?F. A filing may have many signedBy
+   facts; quorum rules consume them.")
+
+(instance quorumSatisfied UnaryPredicate)
+(domain quorumSatisfied 1 Filing)
+(documentation quorumSatisfied EnglishLanguage
+  "(quorumSatisfied ?F) means &%Filing ?F has accumulated the
+   signatures required to be considered duly signed under the
+   applicable quorum rule. Derived, never asserted directly.")
+
+;; Quorum rule.
+;; A filing has quorum iff there exist TWO DISTINCT signers, each
+;; holding ComplianceOfficer at the SAME organization as the filing.
+;; The distinctness conjunct is essential: without (not (equal P1 P2)),
+;; one signer would satisfy the rule by being bound to both P1 and P2.
+
+(=>
+  (and
+    (filingFor ?F ?O)
+    (signedBy ?F ?P1)
+    (signedBy ?F ?P2)
+    (holdsRole ?P1 ComplianceOfficer ?O)
+    (holdsRole ?P2 ComplianceOfficer ?O)
+    (not (equal ?P1 ?P2)))
+  (quorumSatisfied ?F))
