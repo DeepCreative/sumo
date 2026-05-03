@@ -1,0 +1,29 @@
+
+(note BZ-AuditTenantIsolation-01)
+(time 240)
+
+; Cross-tenant audit visibility scoped by an in-window support case.
+;
+; Sarah is a support engineer in supportTenant. Audit event auditE99
+; was emitted by acme. Sarah is staff on supportCase42, which covers
+; acme. The event is within the case's active window. The support-case
+; exception fires and visibleAudit holds.
+;
+; Defined in bravozero-extensions.kif (AuditTenantIsolation block).
+
+(instance acme Organization)
+(instance supportTenant Organization)
+
+(instance sarah CognitiveAgent)
+(instance auditE99 AuditEvent)
+(instance supportCase42 SupportCase)
+
+(userTenant sarah supportTenant)
+(auditEventTenant auditE99 acme)
+(staffOf sarah supportCase42)
+(caseIncludesTenant supportCase42 acme)
+(withinCaseWindow supportCase42 auditE99)
+
+(query (visibleAudit sarah auditE99))
+
+(answer yes)

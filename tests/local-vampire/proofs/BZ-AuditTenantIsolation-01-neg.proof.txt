@@ -1,0 +1,35 @@
+% Running in auto input_syntax mode. Trying TPTP
+% SZS status CounterSatisfiable for BZ-AuditTenantIsolation-01-neg
+% SZS output start Saturation.
+cnf(u15,axiom,
+    ~auditEventTenant(X1,X2) | ~userTenant(X0,X2) | visibleAudit(X0,X1)).
+
+cnf(u17,axiom,
+    auditEventTenant(auditE99,acme)).
+
+cnf(u16,axiom,
+    userTenant(sarah,supportTenant)).
+
+cnf(u19,axiom,
+    ~userTenant(X0,acme) | visibleAudit(X0,auditE99)).
+
+cnf(u18,negated_conjecture,
+    ~visibleAudit(sarah,auditE99)).
+
+% SZS output end Saturation.
+% SZS output start Definitions and Model Updates.
+for all inputs,
+    define caseIncludesTenant(X0,X1) := $true
+for all inputs,
+    define staffOf(X0,X1) := $true
+for all inputs,
+    define withinCaseWindow(X0,X1) := $false
+% SZS output end Definitions and Model Updates.
+% ------------------------------
+% Version: Vampire 5.0.1 (Release build, commit )
+% CaDiCaL version: 2.1.3
+% Termination reason: Satisfiable
+% Time elapsed: 0.0000 s
+% Peak memory usage: 6 MB
+% ------------------------------
+% ------------------------------

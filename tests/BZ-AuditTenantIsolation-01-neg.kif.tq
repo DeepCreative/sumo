@@ -1,0 +1,35 @@
+
+(note BZ-AuditTenantIsolation-01-neg)
+(time 240)
+
+; Negative control for BZ-AuditTenantIsolation-01.
+;
+; Identical setup EXCEPT withinCaseWindow is omitted. The audit event
+; is timestamped OUTSIDE the support case's active window. Sarah's
+; tenant differs from acme so the same-tenant rule does not apply,
+; and the support-case exception cannot fire without withinCaseWindow.
+;
+; LLMs asked this question almost always say yes ("she's support, of
+; course she can see it"). The formalism does not agree. Support-case
+; visibility is bounded by the case's time window; outside that window
+; the support engineer is just another tenant outsider.
+;
+; Expected verdict: the conjecture must NOT be provable.
+
+(instance acme Organization)
+(instance supportTenant Organization)
+
+(instance sarah CognitiveAgent)
+(instance auditE99 AuditEvent)
+(instance supportCase42 SupportCase)
+
+(userTenant sarah supportTenant)
+(auditEventTenant auditE99 acme)
+(staffOf sarah supportCase42)
+(caseIncludesTenant supportCase42 acme)
+
+; (withinCaseWindow supportCase42 auditE99)  ; INTENTIONALLY OMITTED
+
+(query (visibleAudit sarah auditE99))
+
+(answer no)

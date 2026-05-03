@@ -1,0 +1,104 @@
+% Running in auto input_syntax mode. Trying TPTP
+% Refutation found. Thanks to Tanya!
+% SZS status Theorem for BZ-AuditTenantIsolation-01
+% SZS output start Proof for BZ-AuditTenantIsolation-01
+fof(f2,axiom,(
+  ! [X0,X1,X2,X3] : ((staffOf(X0,X3) & caseIncludesTenant(X3,X2) & auditEventTenant(X1,X2) & withinCaseWindow(X3,X1)) => visibleAudit(X0,X1))),
+  file('libs/sumo/tests/local-vampire/BZ-AuditTenantIsolation-01.p',rule_support_window)).
+fof(f4,axiom,(
+  auditEventTenant(auditE99,acme)),
+  file('libs/sumo/tests/local-vampire/BZ-AuditTenantIsolation-01.p',fact_event_tenant)).
+fof(f5,axiom,(
+  staffOf(sarah,supportCase42)),
+  file('libs/sumo/tests/local-vampire/BZ-AuditTenantIsolation-01.p',fact_sarah_staff)).
+fof(f6,axiom,(
+  caseIncludesTenant(supportCase42,acme)),
+  file('libs/sumo/tests/local-vampire/BZ-AuditTenantIsolation-01.p',fact_case_covers)).
+fof(f7,axiom,(
+  withinCaseWindow(supportCase42,auditE99)),
+  file('libs/sumo/tests/local-vampire/BZ-AuditTenantIsolation-01.p',fact_within_window)).
+fof(f8,conjecture,(
+  visibleAudit(sarah,auditE99)),
+  file('libs/sumo/tests/local-vampire/BZ-AuditTenantIsolation-01.p',conjecture_visible)).
+fof(f9,negated_conjecture,(
+  ~visibleAudit(sarah,auditE99)),
+  inference(negated_conjecture,[status(cth)],[f8])).
+fof(f10,plain,(
+  ~visibleAudit(sarah,auditE99)),
+  inference(flattening,[],[f9])).
+fof(f13,plain,(
+  ! [X0,X1,X2,X3] : (visibleAudit(X0,X1) | (~staffOf(X0,X3) | ~caseIncludesTenant(X3,X2) | ~auditEventTenant(X1,X2) | ~withinCaseWindow(X3,X1)))),
+  inference(ennf_transformation,[],[f2])).
+fof(f14,plain,(
+  ! [X0,X1,X2,X3] : (visibleAudit(X0,X1) | ~staffOf(X0,X3) | ~caseIncludesTenant(X3,X2) | ~auditEventTenant(X1,X2) | ~withinCaseWindow(X3,X1))),
+  inference(flattening,[],[f13])).
+fof(f16,plain,(
+  ( ! [X2,X3,X0,X1] : (~withinCaseWindow(X3,X1) | ~staffOf(X0,X3) | ~caseIncludesTenant(X3,X2) | ~auditEventTenant(X1,X2) | visibleAudit(X0,X1)) )),
+  inference(cnf_transformation,[],[f14])).
+fof(f18,plain,(
+  auditEventTenant(auditE99,acme)),
+  inference(cnf_transformation,[],[f4])).
+fof(f19,plain,(
+  staffOf(sarah,supportCase42)),
+  inference(cnf_transformation,[],[f5])).
+fof(f20,plain,(
+  caseIncludesTenant(supportCase42,acme)),
+  inference(cnf_transformation,[],[f6])).
+fof(f21,plain,(
+  withinCaseWindow(supportCase42,auditE99)),
+  inference(cnf_transformation,[],[f7])).
+fof(f22,plain,(
+  ~visibleAudit(sarah,auditE99)),
+  inference(cnf_transformation,[],[f10])).
+fof(f24,plain,(
+  ( ! [X0,X1] : (~staffOf(X0,supportCase42) | ~caseIncludesTenant(supportCase42,X1) | ~auditEventTenant(auditE99,X1) | visibleAudit(X0,auditE99)) )),
+  inference(resolution,[],[f16,f21])).
+fof(f26,definition,(
+  spl0_1 <=> ! [X1] : (~caseIncludesTenant(supportCase42,X1) | ~auditEventTenant(auditE99,X1))),
+  introduced(definition,[new_symbols(naming,[spl0_1])],[avatar_definition])).
+fof(f27,plain,(
+  ( ! [X1] : (~caseIncludesTenant(supportCase42,X1) | ~auditEventTenant(auditE99,X1)) ) | ~spl0_1),
+  inference(avatar_component_clause,[],[f26])).
+fof(f29,definition,(
+  spl0_2 <=> ! [X0] : (~staffOf(X0,supportCase42) | visibleAudit(X0,auditE99))),
+  introduced(definition,[new_symbols(naming,[spl0_2])],[avatar_definition])).
+fof(f30,plain,(
+  ( ! [X0] : (~staffOf(X0,supportCase42) | visibleAudit(X0,auditE99)) ) | ~spl0_2),
+  inference(avatar_component_clause,[],[f29])).
+fof(f31,plain,(
+  spl0_1 | spl0_2),
+  inference(avatar_split_clause,[],[f24,f29,f26])).
+fof(f32,plain,(
+  visibleAudit(sarah,auditE99) | ~spl0_2),
+  inference(resolution,[],[f30,f19])).
+fof(f33,plain,(
+  $false | ~spl0_2),
+  inference(forward_subsumption_resolution,[],[f32,f22])).
+fof(f34,plain,(
+  ~spl0_2),
+  inference(avatar_contradiction_clause,[],[f33])).
+fof(f35,plain,(
+  ~auditEventTenant(auditE99,acme) | ~spl0_1),
+  inference(resolution,[],[f27,f20])).
+fof(f36,plain,(
+  $false | ~spl0_1),
+  inference(forward_subsumption_resolution,[],[f35,f18])).
+fof(f37,plain,(
+  ~spl0_1),
+  inference(avatar_contradiction_clause,[],[f36])).
+cnf(s1, plain, spl0_1 | spl0_2, inference(sat_conversion,[],[f31])).
+cnf(s2, plain, ~spl0_2, inference(sat_conversion,[],[f34])).
+cnf(s3, plain, ~spl0_1, inference(sat_conversion,[],[f37])).
+cnf(s4, plain, $false, inference(rat,[],[s1,s2,s3])).
+fof(f38,plain,(
+  $false),
+  inference(avatar_sat_refutation,[],[s4])).
+% SZS output end Proof for BZ-AuditTenantIsolation-01
+% ------------------------------
+% Version: Vampire 5.0.1 (Release build, commit )
+% CaDiCaL version: 2.1.3
+% Termination reason: Refutation
+% Time elapsed: 0.0000 s
+% Peak memory usage: 6 MB
+% ------------------------------
+% ------------------------------

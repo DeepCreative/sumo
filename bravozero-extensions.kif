@@ -296,3 +296,120 @@
     (roleGrants ?R ?PERM)
     (scopeIncludes ?S ?T))
   (permitted ?P ?PERM ?T))
+
+;; ========================================================================
+;; AuditTenantIsolation - Cross-tenant audit visibility scoped by support case
+;; ========================================================================
+;;
+;; Requesting system: Athena (audit query layer over events emitted by
+;;                    bz-observability)
+;; Discovery: PASSES - SUMO has the Organization class and a primitive
+;;            notion of time, but no axiomatized model of multi-tenant
+;;            data visibility with a scoped exception. Closest existing
+;;            terms (subOrganization, contains, holdsDuring) cover
+;;            organizational structure and temporal facts but not
+;;            data-access boundaries with explicit per-case grants.
+;; Classification: two new entity classes (AuditEvent, SupportCase) plus
+;;                 six new BinaryPredicates and two derivation rules.
+;;
+;; Step 0 inference (acceptance test):
+;;   Given userTenant(U, T_user), auditEventTenant(E, T_event), and
+;;   either (T_user equals T_event) OR (a SupportCase C exists where U
+;;   is staff, C includesTenant T_event, and the event is within C's
+;;   active window), prove visibleAudit(U, E).
+;;   Negative control: if U's tenant differs from E's tenant AND any
+;;   one of the support-case conjuncts is missing (in particular,
+;;   withinCaseWindow), visibleAudit(U, E) must NOT be provable.
+;;
+;; Why this matters: cross-tenant data leakage is the single most common
+;; question regulated buyers ask during procurement. The naive intuition
+;; "support engineers can see anything for support purposes" is exactly
+;; the failure mode. The formalism forces every support-case access to
+;; be scoped to a specific case and timestamped within that case's
+;; window. Drop withinCaseWindow and the exception does not fire.
+
+(subclass AuditEvent ContentBearingObject)
+(documentation AuditEvent EnglishLanguage
+  "An immutable structured record describing a security-relevant
+   action taken in a Bravo Zero service. Emitted via &%bz-observability
+   and queryable via &%bz-client.audit (Athena).")
+
+(subclass SupportCase Process)
+(documentation SupportCase EnglishLanguage
+  "A scoped grant of cross-tenant audit-query authority to a support
+   engineer for a specific time window and a specific set of
+   &%Organization tenants. Required to legitimize any cross-tenant
+   audit visibility outside the user's home tenant.")
+
+(instance userTenant BinaryPredicate)
+(domain userTenant 1 CognitiveAgent)
+(domain userTenant 2 Organization)
+(documentation userTenant EnglishLanguage
+  "(userTenant ?U ?T) means &%CognitiveAgent ?U is a member of
+   &%Organization ?T as their home tenant. A user has exactly one
+   home tenant; access to other tenants requires explicit grants.")
+
+(instance auditEventTenant BinaryPredicate)
+(domain auditEventTenant 1 AuditEvent)
+(domain auditEventTenant 2 Organization)
+(documentation auditEventTenant EnglishLanguage
+  "(auditEventTenant ?E ?T) means &%AuditEvent ?E was emitted by a
+   service operating on behalf of &%Organization ?T. Establishes the
+   tenant of record for the event.")
+
+(instance staffOf BinaryPredicate)
+(domain staffOf 1 CognitiveAgent)
+(domain staffOf 2 SupportCase)
+(documentation staffOf EnglishLanguage
+  "(staffOf ?U ?C) means &%CognitiveAgent ?U is assigned as support
+   staff on &%SupportCase ?C. Required for cross-tenant audit
+   visibility under the support-case exception.")
+
+(instance caseIncludesTenant BinaryPredicate)
+(domain caseIncludesTenant 1 SupportCase)
+(domain caseIncludesTenant 2 Organization)
+(documentation caseIncludesTenant EnglishLanguage
+  "(caseIncludesTenant ?C ?T) means &%SupportCase ?C is authorized
+   to access data scoped to &%Organization ?T. A case may include
+   multiple tenants if the issue spans them.")
+
+(instance withinCaseWindow BinaryPredicate)
+(domain withinCaseWindow 1 SupportCase)
+(domain withinCaseWindow 2 AuditEvent)
+(documentation withinCaseWindow EnglishLanguage
+  "(withinCaseWindow ?C ?E) means the timestamp of &%AuditEvent ?E
+   falls within the active window of &%SupportCase ?C. This is the
+   load-bearing temporal constraint on the support-case exception:
+   without it, support staff would inherit unbounded historical
+   visibility into included tenants.")
+
+(instance visibleAudit BinaryPredicate)
+(domain visibleAudit 1 CognitiveAgent)
+(domain visibleAudit 2 AuditEvent)
+(documentation visibleAudit EnglishLanguage
+  "(visibleAudit ?U ?E) means &%CognitiveAgent ?U is authorized to
+   query &%AuditEvent ?E. Derivable only via the same-tenant rule
+   or the time-windowed support-case exception.")
+
+;; Same-tenant rule.
+;; A user in tenant T may query audit events emitted by T.
+
+(=>
+  (and
+    (userTenant ?U ?T)
+    (auditEventTenant ?E ?T))
+  (visibleAudit ?U ?E))
+
+;; Support-case exception.
+;; A support engineer staffed on a case covering tenant T may query
+;; an event from T, BUT only if the event is within the case's
+;; active window. The withinCaseWindow conjunct is the difference
+;; between scoped support access and unbounded cross-tenant access.
+
+(=>
+  (and
+    (staffOf ?U ?C)
+    (caseIncludesTenant ?C ?T)
+    (auditEventTenant ?E ?T)
+    (withinCaseWindow ?C ?E))
+  (visibleAudit ?U ?E))
